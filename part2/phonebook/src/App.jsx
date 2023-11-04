@@ -1,6 +1,16 @@
 import { useState, useEffect } from 'react'
 import personsService from './services/persons.js'
 
+const Notification = ({message, type}) => {
+  if (message === null) {
+    return null
+  }
+
+  return <div className={type}>
+    {message}
+  </div>
+}
+
 const Filter = ({value, onChangeValue}) => 
   <div>
     filter shown with <input value={value} onChange={onChangeValue}/>
@@ -38,6 +48,24 @@ const Persons = ({persons, filterName, onDelete}) => {
 }
 
 const App = () => {
+  const [message, setMessage] = useState({text: null, type: null})
+
+  const resetMessage = () => setMessage({text: null, type: null});
+  const setMessageError = (messageText) => {
+    setMessage({
+      text: messageText,
+      type: 'error'
+    })
+    setTimeout(resetMessage, 5000)
+  }
+  const setMessageConfirm = (messageText) => {
+    setMessage({
+      text: messageText,
+      type: 'confirm'
+    })
+    setTimeout(resetMessage, 2000)
+  }
+
   const [persons, setPersons] = useState([]) 
   const [filter, setFilter] = useState('')
   const [newName, setNewName] = useState('')
@@ -67,6 +95,7 @@ const App = () => {
                 setPersons(persons.map(person => person.id === existingPerson.id ? personData : person))
                 setNewName('')
                 setNewNumber('')
+                setMessageConfirm(`${existingPerson.name}'s number was changed`)
             })
         }
       } else {
@@ -81,20 +110,30 @@ const App = () => {
             setPersons(persons.concat(personsData))
             setNewName('')
             setNewNumber('')
+            setMessageConfirm(`Added ${newName}`)
           })
       }
     }
   }
 
   const deletePerson = id => {
-    if (window.confirm(`Delete ${persons.find(person => person.id === id).name}?`)) {
+    const personName = persons.find(person => person.id === id).name
+    if (window.confirm(`Delete ${personName}?`)) {
       personsService.deleteId(id)
-      .then(response => setPersons(persons.filter(person => person.id !== id)))
+      .then(response => {
+        setPersons(persons.filter(person => person.id !== id))
+        setMessageConfirm(`Removed ${personName}`)
+      })
+      .catch(error => {
+        setPersons(persons.filter(person => person.id !== id))
+        setMessageError(`Information of ${personName} has already been removed from server`)
+      })
     }
   }
 
   return (
     <div>
+      <Notification message={message.text} type={message.type}/>
       <h2>Phonebook</h2>
         <Filter value={filter} onChangeValue={handleFilterChange} />
       <h2>add a new entry</h2>
