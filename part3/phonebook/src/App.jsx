@@ -56,6 +56,8 @@ const App = () => {
                 setNewName('')
                 setNewNumber('')
                 setMessageConfirm(`${existingPerson.name}'s number was changed`)
+            }).catch(error => {
+              setMessageError(error.response.data.error)
             })
         }
       } else {
@@ -71,6 +73,8 @@ const App = () => {
             setNewName('')
             setNewNumber('')
             setMessageConfirm(`Added ${newName}`)
+          }).catch(error => {
+            setMessageError(error.response.data.error)
           })
       }
     }
